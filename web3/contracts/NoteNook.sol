@@ -95,6 +95,7 @@ contract NoteNook is CSEToken {
         address owner;
         bool isApproved;
         bool onStack;
+        bool inMarket;
     }
 
     struct Voting {
@@ -108,6 +109,8 @@ contract NoteNook is CSEToken {
     Note[] approvedNotes;
 
     mapping(uint => Note) Notes;
+    mapping(address => Note[]) userListedNotes; // all the notes that are listed by the user for selling
+    mapping(address => Note[]) userBuyedNotes; // all the notes that are buyed by the user
     mapping(address => uint) stackedInfo;
     mapping(uint => Voting) votingInfo;
     mapping(uint => address[]) noteOwners;
@@ -157,13 +160,29 @@ contract NoteNook is CSEToken {
             msg.sender,
             msg.sender,
             false,
-            true
+            true,
+            false
         );
         Notes[noteID] = note;
         noteOwners[noteID].push(msg.sender);
         listedNotes.push(note);
         noteID++;
     }
+
+    /**
+     * @dev Gets all the notes that are listed by the user for selling.
+     * @return The information about all the notes that are listed by the user for selling.
+     */
+    function getListedNote() external view returns (Note[] memory) {
+        return listedNotes[msg.sender];
+    }
+
+    /**
+     * @dev Gets all the notes that are buyed by the user.
+     * @return The information about all the notes that are buyed by the user.
+     */
+    function getBuyedNote() external view returns (Note[] memory) {
+        return userBuyedNotes[msg.sender];
 
     /**
      * @dev Retrieves information about a specific note.
@@ -225,6 +244,7 @@ contract NoteNook is CSEToken {
                 isApproved[i] = true;
                 Notes[i].isApproved = true;
                 Notes[i].onStack = false;
+                Notes[i].inMarket = true;
                 approvedNotes.push(Notes[i]);
                 uint returnedAmount = stackedInfo[Notes[i].owner];
                 stackedInfo[Notes[i].owner] = 0;
@@ -249,6 +269,16 @@ contract NoteNook is CSEToken {
         }
 
         Notes[_id].owner = msg.sender;
+        Notes[_id].inMarket = false;
         noteOwners[_id].push(msg.sender);
+    }
+
+    function resell(
+        uint _tokenID,
+        uint index,
+        uint _price
+    ) external {
+        Notes[_tokenID].inMarket = true;
+        Notes[_tokenID].price = _price;
     }
 }
