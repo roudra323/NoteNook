@@ -111,9 +111,9 @@ contract NoteNook is CSEToken {
     mapping(uint => Note) Notes;
     mapping(address => Note[]) userListedNotes; // all the notes that are listed by the user for selling
     mapping(address => Note[]) userBuyedNotes; // all the notes that are buyed by the user
+    mapping(address => Note[]) resellerNotes; // all the notes that are listed for reselling
     mapping(address => uint) stackedInfo;
     mapping(uint => Voting) votingInfo;
-    mapping(uint => address[]) noteOwners;
     mapping(uint => bool) isApproved;
     mapping(address => mapping(uint => bool)) hasVoted;
 
@@ -164,7 +164,7 @@ contract NoteNook is CSEToken {
             false
         );
         Notes[noteID] = note;
-        noteOwners[noteID].push(msg.sender);
+        userListedNotes[msg.sender].push(note);
         listedNotes.push(note);
         noteID++;
     }
@@ -173,7 +173,7 @@ contract NoteNook is CSEToken {
      * @dev Gets all the notes that are listed by the user for selling.
      * @return The information about all the notes that are listed by the user for selling.
      */
-    function getListedNote() external view returns (Note[] memory) {
+    function getListedNotesUser() external view returns (Note[] memory) {
         return listedNotes[msg.sender];
     }
 
@@ -181,8 +181,16 @@ contract NoteNook is CSEToken {
      * @dev Gets all the notes that are buyed by the user.
      * @return The information about all the notes that are buyed by the user.
      */
-    function getBuyedNote() external view returns (Note[] memory) {
+    function getBuyedNoteUser() external view returns (Note[] memory) {
         return userBuyedNotes[msg.sender];
+
+    /**
+     * @dev Gets all the notes that are listed for reselling.
+     * @return The information about all the notes that are listed for reselling.
+     */
+
+    function getResellerNotes() external view returns (Note[] memory) {
+        return resellerNotes[msg.sender];
 
     /**
      * @dev Retrieves information about a specific note.
@@ -197,7 +205,7 @@ contract NoteNook is CSEToken {
      * @dev Retrieves information about a Listed specific note.
      * @return The information about the array specified listed note.
      */
-    function getListedNoteInfo() external view returns (Note[] memory) {
+    function getAllListedNoteInfo() external view returns (Note[] memory) {
         return listedNotes;
     }
 
@@ -205,7 +213,7 @@ contract NoteNook is CSEToken {
      * @dev Retrieves array about approved notes.
      * @return The information about all approved notes.
      */
-    function getApprovedNotes() external view returns (Note[] memory) {
+    function getAllApprovedNotes() external view returns (Note[] memory) {
         return approvedNotes;
     }
 
@@ -270,15 +278,26 @@ contract NoteNook is CSEToken {
 
         Notes[_id].owner = msg.sender;
         Notes[_id].inMarket = false;
-        noteOwners[_id].push(msg.sender);
+        userBuyedNotes[msg.sender].push(Notes[_id]);
     }
 
+    /**
+     * @dev Resells a specific note.
+     * @param _noteID The ID of the note to resell.
+     * @param index The index of the note in the array.
+     * @param _price The price of the note.
+     */
+
     function resell(
-        uint _tokenID,
+        uint _noteID,
         uint index,
         uint _price
     ) external {
-        Notes[_tokenID].inMarket = true;
-        Notes[_tokenID].price = _price;
+        require(isRegistered(), "You are not registered!");
+        require(Notes[_noteID].isApproved, "Note isn't Approved");
+        require(_noteID < noteID, "Invalid note");
+        Notes[_noteID].inMarket = true;
+        Notes[_noteID].price = _price;
+        resellerNotes[msg.sender].push(Notes[_noteID]);
     }
 }
