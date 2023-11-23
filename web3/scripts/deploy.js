@@ -2,24 +2,11 @@ require("ethers");
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  const contract = await ethers.deployContract("NoteNook");
 
-  // console.log("*" * 10);
-  // console.log("Deploying contracts with the account:", deployer.address);
-
-  // const contractSUM = await ethers.deployContract("Sum");
-
-  // await contractSUM.waitForDeployment();
-  // console.log("*" * 10);
-  // console.log("Contract address:", await contractSUM.getAddress());
-
-//add wait here
-
-
-  const contractDIV = await ethers.deployContract("Div");
-
-  await contractDIV.waitForDeployment();
-  console.log("*" * 10);
-  console.log("Contract address:", await contractDIV.getAddress());
+  await contract.waitForDeployment();
+  console.log("Contract Deployer:", deployer.address);
+  console.log("Contract address:", await contract.getAddress());
 }
 
 main()

@@ -36,7 +36,7 @@ contract CSEToken is ERC20, Ownable {
     constructor() ERC20("CSEToken", "CSETK") Ownable(msg.sender) {}
 
     /**
-     * @dev Registers a member with the specified name.
+     * @dev Registers a member with the specified name with 50 native token.
      * @param _name The name of the member.
      */
     function register(string memory _name) public {
@@ -74,10 +74,10 @@ contract CSEToken is ERC20, Ownable {
 }
 
 /**
- * @title MarketPlace
+ * @title NoteNook
  * @dev Marketplace functionality using the CSEToken.
  */
-contract MarketPlace is CSEToken {
+contract NoteNook is CSEToken {
     uint private noteID;
 
     /**
@@ -190,22 +190,6 @@ contract MarketPlace is CSEToken {
         return approvedNotes;
     }
 
-    // function getVotingInfo(uint _id) external view returns(Voting memory) {
-    //     return votingInfo[_id];
-    // }
-
-    // function getApprovedorNot(uint _id) external view returns(bool) {
-    //     return isApproved[_id];
-    // }
-
-    // function getTimesStamp() external view returns(uint) {
-    //     return block.timestamp;
-    // }
-
-    // function getLength() external view returns(uint) {
-    //     return listedNotes.length;
-    // }
-
     /**
      * @dev Records an upvote for a specific note.
      * @param _id The ID of the note to upvote.
@@ -257,7 +241,13 @@ contract MarketPlace is CSEToken {
         require(isRegistered(), "You are not registered!");
         require(Notes[_id].isApproved, "Note isn't Approved");
         require(_id < noteID, "Invalid note");
-        transfer(Notes[_id].owner, Notes[_id].price);
+        uint ownerPrice = (Notes[_id].price * 90) / 100;
+        transfer(Notes[_id].owner, ownerPrice);
+
+        if (Notes[_id].owner != Notes[_id].creator) {
+            transfer(Notes[_id].creator, (Notes[_id].price * 10) / 100);
+        }
+
         Notes[_id].owner = msg.sender;
         noteOwners[_id].push(msg.sender);
     }
